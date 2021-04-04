@@ -22,6 +22,9 @@ const Navbar = (props) => {
           <NavLink className="btn btn-dark mr-2" to="/" exact>
             Home
           </NavLink>
+          <NavLink className="btn btn-dark mr-2" to="/billy" exact>
+            About/Billy
+          </NavLink>
           {
             // In case active user exists
             props.firebaseUser !== null ? (

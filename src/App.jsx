@@ -12,10 +12,10 @@ import { auth } from "./firebase"; // Only require auth() method (firebase.auth(
 function App() {
   const [firebaseUser, setFirebaseUser] = useState(false);
   React.useEffect(() => {
-    // .onAuthStateChange evalua una sesión de firebase, tanto si esta logeada o no.
+    // .onAuthStateChange checks for existing user (logged/unregistered)
     auth.onAuthStateChanged((user) => {
       console.log("User is: ", user);
-      // Si existe un usuario activo, monta en el state la info. del user
+      // Set at 'firebaseUser' current user (ONLY IF Firebase finds one)
       if (user) {
         setFirebaseUser(user);
         console.log("firebaseUser state: ", firebaseUser);
@@ -40,6 +40,12 @@ function App() {
           </Route>
           <Route path="/reset">
             <Reset></Reset>
+          </Route>
+          <Route path="/billy">
+            Copyright © Billy Rodríguez Morales 2021 -
+            <a href="https://github.com/BillyVector117">Github</a>
+            <hr/>
+            Thanks Bluuweb!
           </Route>
           <Route path="/">Home component</Route>
         </Switch>
