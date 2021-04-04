@@ -1,5 +1,46 @@
-#fireAuth-React #Authentication #firebase #firestore
-![fireAuth-screenshot-app](https://github.com/BillyVector117/fireAuth-React/blob/main/src/Screenshot_1.png)
+#fireAuth-React #Authentication #firebase #fireStore #ReactJS #create-react-app #react-router-dom #mongoDB #JavaScript #JSX #Bootstrap4.5
+React-Tasks-Authenticate application using (Firebase, FireStore, create-react-app, rect-router-dom, mongoDB, JavaScript, Jsx, Firebase Authentication and Bootstrap 4.5)
+-> https://react-tasks-authentication.herokuapp.com/ AVAILABLE DEMO PAGE !
+
+-> Login page
+![screnshoot-1](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_10.png)
+-> Signup page
+![screnshoot-2](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_1.png)
+-> Admin (authenticated user) page
+![screnshoot-3](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_2.png)
+-> update task page
+![screnshoot-4](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_3.png)
+-> updated and created tasks page
+![screnshoot-5](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_4.png)
+-> pagination
+![screnshoot-6](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_5.png)
+-> pagination-2
+![screnshoot-7](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_6.png)
+-> deleted tasks
+![screnshoot-8](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_7.png)
+-> Index page
+![screnshoot-9](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_8.png)
+-> reset password page
+![screnshoot-10](https://github.com/BillyVector117/React-firebase-Authentication/blob/main/Screenshot_9.png)
+
+
+Thanks Bluuweb!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Getting Started with Create React App
 
