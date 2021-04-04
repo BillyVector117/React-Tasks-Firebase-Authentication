@@ -1,124 +1,195 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase"; // Acceder a la configuración de firebase (modulo)
+// Functions
+import { db } from "../firebase";
+// Dependencies
+import moment from "moment"; // Allows to use Date() methods
+import "moment/locale/es"; // Moment 'ES'
+// ¿props' contains full user Object from 'Admin.jsx'
 const Firestore = (props) => {
-  // Crear state para tasks
-  const [tasks, setTasks] = useState([]);
-  // Crear state para estado del formulario (relacionarlo)
-  const [task, setTask] = useState("");
-  // State para cambiar el formulario de crear -editar
-  const [editionMode, setEditionMode] = useState(false);
+  const [tasks, setTasks] = useState([]); // Database documents
+  const [task, setTask] = useState(""); // Match input-Form
+  const [editionMode, setEditionMode] = useState(false); //Form-edit (enable-disable)
   const [id, setId] = useState("");
+  // Pagination state
+  const [ultimo, setUltimo] = useState(null); // Read last stored document
+  const [desactive, setDesactive] = useState(false); // Disabled 'next' button if no found documents
 
-  // useEffect para capturar la data de firestore
+  // Capture data(documents/tasks) from database
   useEffect(() => {
-    // Obtener data de Firestore
     const getData = async () => {
       try {
-        const data = await db.collection(props.user.uid).get(); // Captura todos los docs de la colección del uid del user
-        // console.log(data.docs) // Muestra los datos provenientes de firestore (no legibles)
+        setDesactive(true); // Disable 'Load More' button
+        // Get limited documents of current user (each user has its cown collection)
+        const data = await db
+          .collection(props.user.uid)
+          .limit(2)
+          .orderBy("createdAt", "desc")
+          .get();
+        // console.log(data.docs) // No-legible data
         const arrayData = data.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })); // Data legible, ya que solo leemos el id y la data
-        console.log(arrayData); // Devuelve un array con la data legible (la enviamos al state)
-        setTasks(arrayData); // Enviamos la data recibida al state tasks
+        })); // Legible-data in array-Format
+        setUltimo(data.docs[data.docs.length - 1]); // Capture the last document
+        console.log("LEGIBLE DATA: ", arrayData); // Returns Legible-data in array-format, that will set in 'tasks' state (To render in HTML)
+        setTasks(arrayData);
+        // Second query, The searching starts after last document of the last query
+        const query = await db
+          .collection(props.user.uid)
+          .limit(2)
+          .orderBy("createdAt", "desc")
+          .startAfter(data.docs[data.docs.length - 1]) // Start after last found document
+          .get();
+        // disable 'Load-more' button if query no found items
+        if (query.empty) {
+          console.log("No documents to load");
+          setDesactive(true);
+        } else {
+          // activate 'load-more' button
+          setDesactive(false);
+        }
       } catch (error) {
         console.error(error);
       }
     };
-    getData(); // Ejecutar función
+    getData();
   }, [props.user.uid]);
 
+  const nextPage = async () => {
+    // console.log("Next page!");
+    try {
+      // 'data' returns No-legible data
+      const data = await db
+        .collection(props.user.uid)
+        .limit(2)
+        .orderBy("createdAt", "desc")
+        .startAfter(ultimo) // Start after last found document ('ultimo' state)
+        .get();
+      // 'arrayData' returns an array with Legible-data
+      const arrayData = data.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks([...tasks, ...arrayData]); // Combine the current tasks with the news (2)
+      setUltimo(data.docs[data.docs.length - 1]); // 'ultimo' state will change every 'load-more' button is clicked
+      const query = await db
+        .collection(props.user.uid)
+        .limit(2)
+        .orderBy("createdAt", "desc")
+        .startAfter(data.docs[data.docs.length - 1]) // 'ultimo' state
+        .get();
+      // disable 'Load-more' button if query no found items
+      if (query.empty) {
+        console.log("No documents to load");
+        setDesactive(true);
+      } else {
+        // activate 'load-more' button
+        setDesactive(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  // CREATE/ADD document (by default 'editionMode' state is false)
   const addTask = async (event) => {
     event.preventDefault();
-    // Si no ha escrito algo marca error
+    // Validate input value
     if (!task.trim()) {
       console.log("Must type a task");
       return;
     }
+    // Success case:
     try {
-      const newTask = { name: task, createdAt: Date.now() }; // Definir la data a guardar
+      const newTask = { name: task, createdAt: Date.now() }; // Define data with input-value as 'name'
       const data = await db.collection(props.user.uid).add(newTask);
-      // Montamos la data recibida al state tasks (para que las muestre al usuario)
-      setTasks([...tasks, { ...newTask, id: data.id }]); // Capturamos el id aleatorio que firestore coloca por default
-      setTask(""); // Limpiar el state
+      // Add to 'tasks' state the previous contained object and the new one, but adding 'id' key with the new random generated Firebase's ID
+      setTasks([...tasks, { ...newTask, id: data.id }]);
+      setTask("");
+      console.log("Task added: ", task);
     } catch (error) {
       console.log(error);
     }
-    console.log(task);
   };
 
+  // DELETE DOCUMENT
   const deleteTask = async (id) => {
     try {
-      await db.collection(props.user.uid).doc(id).delete(); // De la colección 'task's selecciona el documento con el id pasado y eliminalo
-      const filterArray = tasks.filter((item) => item.id !== id); // Filtra tasks, muestra el id de TODAS las tareas que sea diferente al id pasado (clickeado a eliminar)
-      setTasks(filterArray); // Montar el array filtrado al state para que se renderice automaticamente
-      console.log("task deleted");
+      await db.collection(props.user.uid).doc(id).delete();
+      const filterArray = tasks.filter((item) => item.id !== id); // Filter 'tasks' state (Array) and exclude the current deleted item
+      setTasks(filterArray); // Set the filterArray to 'tasks' state
+      console.log("task deleted :)");
     } catch (error) {
       console.log(error);
     }
   };
-  // activeEdition() recibe la tarea mapeada.
+  // Change Create/add-Form TO Edit-Form )
   const activateEdition = (task) => {
-    setEditionMode(true);
-    setTask(task.name); // Cambia el value del input (ya que en su propiedad tiene como value 'task')
-    setId(task.id); // Montamos en el state 'id' el id de la tarea clickeada a editar
+    setEditionMode(true); // Allows to activate Edit-Form
+    setTask(task.name); // Set task.name content to Task-Input value
+    setId(task.id); // Set at 'id' state the clicked document's ID
   };
-  // updateTask() evento al dar 'submit' en editar
+  // UPDATE DOCUMENT-Submit-Form (receive the complete Task Object (maped))
   const updateTask = async (event) => {
     event.preventDefault();
-    // Si el input esta vacio (no se ha ejecutado su método .trim() (eliminar espacios), marca error)
+    // Prevent Empty task
     if (!task.trim()) {
       console.log("Need to fill this field");
       return;
     }
     try {
-      // El .doc(id) es montado al state de 'id' una vez se activa el modo edición
-      // .update() recibe un objecto con los campos a actualizar, no es necesario TODO el objeto
+      // 'id' refers to the set value in activateEdition() 'id' state, so, select that document and update ONLY NECESSARY FIELDS (Avoid type all Properties object)
       await db.collection(props.user.uid).doc(id).update({ name: task });
-      // Filtramos todas las tareas, el doc. que tenga el mismo id al que clickeamos 'edit' actualizara sus datos
+      // Filter all tasks and update the current edited-task (To set at 'tasks' state)
       const filterArray = tasks.map((item) =>
         item.id === id
           ? { id: item.id, createdAt: item.createdAt, name: task }
           : item
       );
-      setTasks(filterArray); // Montar en el state de tareas el array filtrado (actualizadó)
-      setEditionMode(false); // Remueve el modo edición del form
-      setTask(""); // el input se formateara
-      setId(""); // El id vacio ya que no hay operaciones
+      setTasks(filterArray); // Set updated tasks array
+      setEditionMode(false); // Remove edition-Form mode
+      setTask(""); // Clean input
+      setId("");
       console.log("task updated!");
     } catch (error) {
       console.log(error);
     }
   };
 
-  // Retorna una estructura HTML junto con los documentos capturados por firestore
   return (
     <div className="container mt-3">
       <div className="row">
         <div className="col-md-6">
           <ul className="list-group">
             {tasks.map((task) => (
-              <li className="list-group-item" key={task.id}>
+              <li className="list-group-item mb-2" key={task.id}>
                 <b>{task.name}</b>
-                {/* .name es una propiedad del objeto/document de firestore, pero se encuentra dentro del objecto del state 'tasks' */}
                 <button
                   className="btn btn-danger btn-sm d-flex float-right"
-                  onClick={() => deleteTask(task.id)} // Al clickear le pasamos como argumento el id de la tarea (Por el .map)
+                  onClick={() => deleteTask(task.id)}
                 >
                   Delete
                 </button>
                 <button
                   className="btn btn-warning btn-sm d-flex float-right mr-3"
-                  onClick={() => activateEdition(task)} // Activamos el form para editar, enviandole la tarea COMPLETA mapeada
+                  onClick={() => activateEdition(task)} // Activate Edit-Form, sending full task Object
                 >
                   Edit
                 </button>
+                <p className="moment d-block">
+                  Created at: {moment(task.createdAt).format("LLL")}
+                </p>
               </li>
             ))}
           </ul>
+          <button
+            className="btn btn-info mt-2 btn-sm"
+            onClick={() => nextPage()}
+            disabled={desactive}
+          >
+            Next page
+          </button>
         </div>
-        {/* En la otra columna se mostrara un Form */}
+        {/* Form in this column */}
         <div className="col-md-6">
           <h3> {editionMode ? "Update task" : "Add new task"}</h3>
           <form onSubmit={editionMode ? updateTask : addTask}>
@@ -126,9 +197,8 @@ const Firestore = (props) => {
               type="text"
               placeholder="Add New Task"
               className="form-control mb-2"
-              // En cada cambio del input, el evento captura lo typeado y lo envia al state "task"
               onChange={(event) => setTask(event.target.value)}
-              value={task} // El valor por defecto del input es la tarea
+              value={task} // Set the typed task to 'task' state
             />
             <button
               className={

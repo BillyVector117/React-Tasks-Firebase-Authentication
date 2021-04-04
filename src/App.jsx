@@ -1,31 +1,36 @@
 import "./App.css";
-// Modulo para usar rutas
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom"; // Allows to create routes
 import React, { useState } from "react";
+// Components
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Admin from "./components/Admin";
-import { auth } from "./firebase"; // Require firebase.auth();
-// Switch envuelve el contenido dinamico, Route asigna la ruta/path de ese componente dinamico
+import Reset from "./components/Reset";
+// Functions
+import { auth } from "./firebase"; // Only require auth() method (firebase.auth())
+// Wraps dinamic content (all pages) using <Switch/>, Assign path (Url) with <Router/> tag (each page)
 function App() {
-  const [firebaseUser, setFirebaseUser] = useState(false); // El usuario a detectar inicia en false
+  const [firebaseUser, setFirebaseUser] = useState(false);
   React.useEffect(() => {
     // .onAuthStateChange evalua una sesión de firebase, tanto si esta logeada o no.
     auth.onAuthStateChanged((user) => {
-      console.log(user);
+      console.log("User is: ", user);
       // Si existe un usuario activo, monta en el state la info. del user
       if (user) {
         setFirebaseUser(user);
+        console.log("firebaseUser state: ", firebaseUser);
       } else {
         setFirebaseUser(null);
+        console.log("firebaseUser state: ", firebaseUser);
       }
     });
   });
-  // Si el state 'firebase' es distinto de false/null muestra todas las rutas, si no, un loader
+  // If active user exists
   return firebaseUser !== false ? (
     <Router>
       <div className="App">
-        <Navbar firebaseUser={firebaseUser}></Navbar>
+        <Navbar firebaseUser={firebaseUser} />
+        {/* Navbar is visible in all routes */}
         <Switch>
           <Route path="/login">
             <Login></Login>
@@ -33,7 +38,10 @@ function App() {
           <Route path="/admin">
             <Admin></Admin>
           </Route>
-          <Route path="/">Home</Route>
+          <Route path="/reset">
+            <Reset></Reset>
+          </Route>
+          <Route path="/">Home component</Route>
         </Switch>
       </div>
     </Router>

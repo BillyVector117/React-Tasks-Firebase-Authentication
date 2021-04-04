@@ -2,16 +2,14 @@ import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import { auth } from "../firebase";
 import { withRouter } from "react-router-dom";
-// En props tenemos la info. del user (si esta logeado o no)
+// props = firebaseUser(object) from App.jsx and withRouter to redirect
 const Navbar = (props) => {
-  // Cierra sesión y dirige al /login
+  // Log active session out
   const logOut = () => {
-    // Metodo que cierra sesión activa
     auth
       .signOut()
-      // Si el signOut es exitoso redirigelo a una ruta
       .then(() => {
-        props.history.push("./login");
+        props.history.push("./login"); // To use this method is necessary export with withRouter()
       });
   };
   return (
@@ -25,7 +23,7 @@ const Navbar = (props) => {
             Home
           </NavLink>
           {
-            // Si el state es DIFERENTE DE NULL, muestra botón Admin. Si no, no crea el botón
+            // In case active user exists
             props.firebaseUser !== null ? (
               <NavLink className="btn btn-dark mr-2" to="/admin">
                 Admin
@@ -33,7 +31,7 @@ const Navbar = (props) => {
             ) : null
           }
           {
-            // Si existe un usuario, puede cerrar sesión, si no, muestra botón de Login
+            // logOut button if active user, else Login button
             props.firebaseUser !== null ? (
               <button className="btn btn-dark mr-2" onClick={() => logOut()}>
                 Log out

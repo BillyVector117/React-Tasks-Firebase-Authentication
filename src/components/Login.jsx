@@ -1,37 +1,37 @@
 import React, { useState } from "react";
+// Dependencies
 import { Link, withRouter } from "react-router-dom";
-// withRouter: Empuja al user a diferentes routes, se usa con 'props.history'
+// Functions
 import { auth, db } from "../firebase";
 
 const Login = (props) => {
-  // email y password se relacionan con el e. onChange del input
+  // 'email-password' refers to 'input name'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [register, setRegister] = useState(false);
 
-  // Evento al dar 'submit' Login/Register
+  // Submit-Form event
   const dataSubmit = (event) => {
     event.preventDefault();
-    // Validar input de E-mail y password si estan vacias
+    // Validate inputs
     if (!email.trim()) {
-      // console.log('Enter your E-mail')
       setError("Enter your E-mail");
       return;
     }
     if (!password.trim()) {
-      // console.log('Enter your password')
       setError("Enter your Password");
       return;
     }
     if (password.length < 6) {
-      // console.log('Password must have 6 at least characters')
       setError("Password must have at least 6 characters");
       return;
     }
-    setError(null); // Cualquier mensaje de error no se mostrara
+    
+    // Success case: No errors
+    setError(null);
     console.log("validations passed");
-    // Si 'register' esta activo, se ejecuta la función de registrar con Firebase
+    // register/signIn depending Form-section
     if (register) {
       registerUsers();
     } else {
@@ -40,36 +40,38 @@ const Login = (props) => {
   };
   const registerUsers = React.useCallback(async () => {
     try {
-      // Crear una nueva cuenta usando E-mail y password
+      // createUserWithEmailAndPassword() method needs to active in Firebase
       const res = await auth.createUserWithEmailAndPassword(email, password);
-      // .add() genera un id aleatorio, .doc le proporcionamos el IUD/email del user creado
+      // console.log("DATA CREATED: ", res); // Returns user object
+      // .add() generates random ID, .doc() needs a IUD (In this case set as email)
       await db.collection("users").doc(res.user.email).set({
         uid: res.user.uid,
         email: res.user.email,
       });
-      // Creamos una colección especifica para cada usuario registrado
+      // res demo: [user1@gmail.com: {uid: 12341232, email: user1@gmail.com}]
+      // Create a new collection to save tasks for each new registered user
       await db.collection(res.user.uid).add({
-        name: 'Task random',
-        createdAt: Date.now()
-      })
-      console.log(res.user);
-      // Limpiar formulario y useStates
+        name: "Edit this dandom Task!",
+        createdAt: Date.now(),
+      });
+      // Clean States and redirect to /admin section
       setEmail("");
       setPassword("");
       setError(null);
       props.history.push("/admin");
     } catch (error) {
-      console.log(error);
+      console.error(error);
       if (error.code === "auth/email-already-in-use") {
         setError("Email in use");
       }
     }
   }, [email, password, props.history]);
+
   const loginUsers = React.useCallback(async () => {
     try {
-      const res = await auth.signInWithEmailAndPassword(email, password);
-      console.log(res.user);
-      // Limpiar formulario y useStates
+      await auth.signInWithEmailAndPassword(email, password);
+      // console.log(res.user);
+      // Clean states
       setEmail("");
       setPassword("");
       setError(null);
@@ -82,19 +84,20 @@ const Login = (props) => {
         setError("The email address is badly formatted.");
       }
       if (error.code === "auth/user-not-found") {
-        setError("No user found!!");
+        setError("No user found!");
       }
       if (error.code === "auth/wrong-password") {
         setError(
           "The password is invalid or the user does not have a password"
         );
       }
-      console.log(error);
+      console.error(error);
     }
   }, [email, password, props.history]);
 
   return (
     <div className="mt-2">
+      {/* register is false by default */}
       <h4>{register ? "Register section" : "Login section"}</h4>
       <hr />
       <div className="row justify-content-center">
@@ -126,11 +129,17 @@ const Login = (props) => {
               onClick={() => setRegister(!register)}
             >
               <Link to="/login">
-                {register
-                  ? "Already have an account?"
-                  : "Don´t have an account?, Click here"}
+                {register ? (
+                  <b>Already have an account?</b>
+                ) : (
+                  <b>"Don´t have an account?, Click here"</b>
+                )}
               </Link>
             </button>
+
+            <Link className="d-block" to="/reset">
+              {register ? null : "Forgot your password?"}
+            </Link>
           </form>
         </div>
       </div>
