@@ -1,3 +1,6 @@
+#fireAuth-React #Authentication #firebase #firestore
+![fireAuth-screenshot-app](https://github.com/BillyVector117/fireAuth-React/blob/main/src/Screenshot_1.png)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
